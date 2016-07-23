@@ -1,0 +1,697 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title></title>
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/config.js"></script>
+    <style type="text/css">
+        *
+        {
+            font-family: 'Microsoft YaHei','Heiti SC';
+        }
+        html 
+        {
+            height: 100%;
+            width: 100%;
+            font-family: 'Microsoft YaHei','Heiti SC';
+            font-size: 100px;
+            overflow: hidden;
+            outline: 0;
+            -webkit-text-size-adjust: none;
+        }
+
+        body 
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        header 
+        {
+            width: 100%;
+            background-color: #2f2929;
+            height: 0.5rem;
+            font-size: 0.18rem;
+            color: white;
+            position: fixed;
+            left: 0px;
+            right: 0px;
+            line-height: 0.5rem;
+            padding-left: 0.2rem;
+            z-index:99;
+        }
+
+        header a
+        {
+            height:0.3rem;font-size:0.2rem;line-height:0.3rem;
+        }
+
+        #imagelist, #houseinfo_container
+        {
+            width:100%;
+            position:absolute;
+            top:0.5rem;
+            bottom:0rem;
+            left:0px;right:0px;
+        }
+
+        #imagelist .pictureinfo, #imagelist .pictureinfo_x
+        {
+            width:46%;
+            float:left;
+            height:1rem;
+            border:1px solid #c0c0c0;
+            position:relative;
+            background-position:center center;
+            background-repeat:no-repeat;
+            background-size:contain;
+            margin:2%;
+            text-align:center;
+            font-size:0.2rem;
+            line-height:1rem;
+            font-size:0.2rem;
+        }
+
+        #imagelist .pictureinfo_x
+        {
+        }
+
+         #imagelist .pictureinfo div, #imagelist .pictureinfo_x div, #imagelist .pictureinfo span, #imagelist .pictureinfo_x span
+         {
+             position:absolute;top:0px;left:0px;width:100%;height:100%;text-align:center;
+             line-height:1rem;font-size:0.2rem;display:block;
+         }
+
+        #imagelist .pictureinfo a, #imagelist .pictureinfo_x a
+        {
+            position:absolute;bottom:0px;right:0px;display:normal;font-size:0.2rem;
+            width:0.3rem;height:0.3rem;
+            display:normal
+        }
+
+        #imagelist .pictureinfo a
+        {
+            display:none;
+        }
+
+         #imagelist .pictureinfo span
+         {
+             background-color:orange;
+             opacity:0.4;
+             top:0%;
+             bottom:0px;
+             left:0px;
+             right:0px;
+             width:auto;
+         }
+
+
+            .house_info_row {
+            background-color: #fafafa;
+            width: 100%;
+            height: 0.55rem;
+            border-top: 1px solid #c0c0c0;
+            font-size: 0.2rem;
+            line-height: 0.55rem;
+            padding-left: 0.1rem;
+            margin: 0px;
+        }
+
+
+        .house_info_row .cell {
+            display: table-cell;
+            padding-left: 0.2rem;
+            vertical-align:middle;
+        }
+
+        .house_info_row .cell input
+        {
+            height:0.35rem;font-size:0.16rem;
+        }
+
+        .house_info_row .cell select, .cell td select
+        {
+            height:0.38rem;font-size:0.16rem;
+        }
+
+        .house_info_row .cell label
+        {
+            font-size:0.16rem;font-weight:normal;
+            margin-left:0.1rem;margin-right:0.1rem;
+        }
+
+        
+    </style>
+    <script language="javascript">
+        var _alert = window.alert;
+        window.alert = function(msg)
+        {
+            if (UtilityObject)
+                UtilityObject.toast(msg);
+            else
+                _alert(msg);
+        }
+
+        var user = getLocalUserInfo();
+
+        if (user)
+        {
+            ActivityObject.setAuthInfo(user.Mobile, user.PasswordMD5);
+        }
+        else
+        {
+            UtilityObject.toast("no user");
+        }
+           
+
+        ActivityObject.setUploadServiceURL(ServiceAddress.PICTURE_LOAD);
+        function onDeleteHousePictureReady(picture)
+        {
+            var imagelist = document.getElementById("imagelist");
+            for(var i = 0; i< imagelist.childNodes.length; i++)
+            {
+                var ccinfo = imagelist.childNodes[i]; 
+                ccinfo.className = "pictureinfo";
+            }
+
+            picture.className = "pictureinfo_x";
+        }
+
+        //创建一个待上传的图片框
+        function onCreateUploaddingImage(imageUrl, local_guid)
+        {
+            var picInfo = document.createElement("div");
+            picInfo.className = "pictureinfo";
+            picInfo.id = "task_" + local_guid;
+            picInfo.style.backgroundImage = "url(" + imageUrl + ")";
+
+            var btn_x = document.createElement("a");
+            btn_x.className = "btn btn-xs btn-danger";
+            btn_x.innerHTML = "X";
+            picInfo.appendChild(btn_x);
+            
+            var progressShape = document.createElement("span");
+            picInfo.appendChild(progressShape);
+
+            var progressInfo = document.createElement("div");
+            progressInfo.innerHTML = "准备上传";
+            picInfo.appendChild(progressInfo);
+
+            document.getElementById("imagelist").insertBefore(picInfo, document.getElementById("uploadbutton"));
+        }
+
+
+        //当一个上传图片的进度回调被调用
+        function onUploaddingImageProgress(local_guid, bytesUploaded, bytesTotal)
+        {
+            var per = bytesUploaded / bytesTotal;
+
+            if(per < 1)
+            {
+                per = parseInt(per * 100);
+            }
+            else
+            {
+                per = 100;
+            }
+                
+            document.getElementById("task_" + local_guid).getElementsByTagName("div")[0].innerHTML = "上传中(" + per + "%)";
+            document.getElementById("task_" + local_guid).getElementsByTagName("span")[0].style.left = per + "%";
+        }
+
+
+        function onUploaddingImageSuccess(taskId, pic_id)
+        {
+            document.getElementById("task_" + taskId).id = "pic_" + pic_id;
+            document.getElementById("pic_" + pic_id).onclick = function()
+            {
+                onDeleteHousePictureReady(document.getElementById("pic_" + pic_id));
+            }
+            document.getElementById("pic_" + pic_id).getElementsByTagName("a")[0].onclick = function ()
+            {
+                deleteHousePicture(pic_id);
+            }
+
+            //删除进度条
+            var progressShape = document.getElementById("pic_" + pic_id).getElementsByTagName("span")[0];
+            progressShape.parentNode.removeChild(progressShape);
+
+            //删除进度信息
+            var progressInfo = document.getElementById("pic_" + pic_id).getElementsByTagName("div")[0];
+            progressInfo.parentNode.removeChild(progressInfo);
+
+            alert("上传成功");
+        }
+
+        function onUploaddingImageError(taskId, errorCode, errorMsg)
+        {
+            document.getElementById("task_" + taskId).getElementsByTagName("div")[0].innerHTML = errorMsg;
+
+            document.getElementById("task_" + taskId).onclick = function ()
+            {
+                onDeleteHousePictureReady(document.getElementById("task_" + taskId));
+            }
+
+            document.getElementById("task_" + taskId).getElementsByTagName("a")[0].onclick = function ()
+            {
+                document.getElementById("task_" + taskId).parentNode.remove(document.getElementById("task_" + taskId));
+            }
+
+            alert(errorMsg);
+        }
+
+        function createPictureBox(pictureinfo, isUploadButton)
+        {
+            if (isUploadButton == false)
+            {
+                if (pictureinfo.Filename.indexOf("noinfo") != -1)
+                {
+                    return;
+                }
+                var picture = document.createElement("div");
+                picture.className = "pictureinfo";
+                picture.id = "pic_" + pictureinfo.PicId;
+                picture.style.backgroudImage = "url(img/thumb_pic_loadding.jpg)";
+                picture.onclick = function ()
+                {
+                    onDeleteHousePictureReady(picture);
+                }
+
+                var x_link = document.createElement("a");
+                x_link.className = "btn btn-xs btn-danger";
+                x_link.innerHTML = "X";
+                x_link.onclick = function()
+                {
+                    deleteHousePicture(pictureinfo.PicId);
+                }
+                picture.appendChild(x_link);
+
+                document.getElementById("imagelist").appendChild(picture);
+                ImageProvider.load(pictureinfo.Filename, "pic_" + pictureinfo.PicId);
+
+                return picture;
+            }
+            else
+            {
+                var picture = document.createElement("div");
+                picture.className = "pictureinfo";
+                picture.id = "uploadbutton";
+                picture.style.cssText = "background-color:#c0c0c0;background-image:url('img/local_album.png');background-position:center center;background-size:cover;background-repeat:no-repeat";
+                picture.onclick = function () { ActivityObject.openAlbum(); }
+
+                document.getElementById("imagelist").appendChild(picture);
+                return picture;
+            }
+        }
+
+        function initHouseInfo(houseinfo)
+        {
+            document.getElementById("housetitle").value = houseinfo.Title;
+            document.getElementById("address").value = houseinfo.Address;
+            document.getElementById("buildingName").value = houseinfo.BuildingName;
+            document.getElementById("areasize").value = houseinfo.AreaSize;
+            document.getElementById("floorNum").value = houseinfo.FloorNum;
+            document.getElementById("floorTotal").value = houseinfo.FloorTotal;
+            document.getElementById("customName").value = houseinfo.CustomName;
+            document.getElementById("isCustomTel").value = houseinfo.IsCustomTel;
+            document.getElementById("customTel").value = houseinfo.CustomTel;
+            document.getElementById("floorTotal").value = houseinfo.FloorTotal;
+            document.getElementById("contractCode").value = houseinfo.ContractCode;
+            //document.getElementById("payTypeId").value = houseinfo.PayTypeId;
+            document.getElementById("monthPrice").value = houseinfo.MonthPrice;
+            document.getElementById("threeMonthPrice").value = houseinfo.ThreeMonthPrice;
+            document.getElementById("halfYearPrice").value = houseinfo.HalfYearPrice;
+            document.getElementById("yearPrice").value = houseinfo.YearPrice;
+            document.getElementById("aspectId").value = houseinfo.AspectId;
+            document.getElementById("decorationId").value = houseinfo.DecorationId;
+            document.getElementById("structId").value = houseinfo.StructId;
+            document.getElementById("zoneId").value = houseinfo.ZoneId;
+            document.getElementById("joinTypeId").value = houseinfo.JoinType;
+            document.getElementById("comment").value = (houseinfo.Comment == null) ? "" : houseinfo.Comment;
+            document.getElementById("cbIsInError").checked = houseinfo.IsInError;
+            document.getElementById("errorMessage").value = houseinfo.ErrorMessage;
+            document.getElementById("rowErrorMessage").style.display = ((houseinfo.IsInError) ? "" : "none");
+            document.getElementById("completeDate").value = houseinfo.CompleteDateString;
+            document.getElementById("rank").value = houseinfo.Rank;
+            document.getElementById("isCompleted").value = houseinfo.IsCompleted;
+        }
+
+        function initImagelist(thumb_image_array)
+        {
+            for(var pIndex in thumb_image_array)
+            {
+                var pictureinfo = thumb_image_array[pIndex];
+                createPictureBox(pictureinfo, false);
+            }
+
+            createPictureBox(pictureinfo, true);
+        }
+
+
+        function onImageLoaded(cachedImageUrl, id)
+        {
+            document.getElementById(id).style.backgroundImage = "url(" + cachedImageUrl + ")";
+        }
+
+        function saveHouseInfo()
+        {
+            var houseid = 0;
+
+            if (HouseInfo)
+                houseid = HouseInfo.getHouseId();
+
+            var houseinfoConfig = {
+                houseid: houseid,
+                title: document.getElementById("housetitle").value,
+                address: document.getElementById("address").value,
+                buildingName: document.getElementById("buildingName").value,
+                areaSize : document.getElementById("areasize").value,
+                zoneId: document.getElementById("zoneId").value,
+                aspectId: document.getElementById("aspectId").value,
+                decorationId: document.getElementById("decorationId").value,
+                structId: document.getElementById("structId").value,
+                monthPrice: document.getElementById("monthPrice").value,
+                threeMonthPrice: document.getElementById("threeMonthPrice").value,
+                halfYearPrice: document.getElementById("halfYearPrice").value,
+                yearPrice: document.getElementById("yearPrice").value,
+                joinType: document.getElementById("joinTypeId").value,
+                floorNum: document.getElementById("floorNum").value,
+                floorTotal: document.getElementById("floorTotal").value,
+                customName: document.getElementById("customName").value,
+                isCustomTel: document.getElementById("isCustomTel").value,
+                customTel: document.getElementById("customTel").value,
+                contractCode: document.getElementById("contractCode").value,
+                comment: document.getElementById("comment").value,
+                isInError: document.getElementById("cbIsInError").checked,
+                errorMessage: document.getElementById("errorMessage").value,
+                rank: document.getElementById("rank").value,
+                completeDate : document.getElementById("completeDate").value,
+                IsCompleted : document.getElementById("isCompleted").value
+            };
+
+            if(houseinfoConfig.title == "")
+            {
+                alert("标题不能为空");
+                return;                
+            }
+
+            if (houseinfoConfig.buildingName == "")
+            {
+                alert("房源的所在小区信息不能为空");
+                return;
+            }
+
+            if (isNaN(parseInt(houseinfoConfig.areaSize)) == true)
+            {
+                alert("房间面积格式填写不正确");
+                return;
+            }
+
+            if (isNaN(parseInt(houseinfoConfig.floorNum)) == true || isNaN(parseFloat(houseinfoConfig.floorTotal)) == true)
+            {
+                alert("楼层填写不正确");
+                return;
+            }
+
+            if (houseinfoConfig.rank == "")
+            {
+                alert("积分填写不正确");
+                return;
+            }
+
+            if (houseinfoConfig.completeDate == "")
+            {
+                alert("房源的到期日期格式不正确");
+                return;
+            }
+
+            try
+            {
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: ServiceAddress.HOUSE_UPDATE,
+                    data: houseinfoConfig,
+                    success: function (response)
+                    {
+                        if (response != null && response.errorCode != undefined)
+                        {
+                            if (parseInt(response.errorCode) == 0)
+                            {   
+                                alert("信息保存成功");
+                            }
+                            else
+                            {
+                                alert(response.errorMsg);
+                            }
+                            return;
+                        }
+
+                        alert("服务器响应错误，可能您的信息没有保存");
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "json",
+                    beforeSend: function (xhr) { var user = getLocalUserInfo(); if (user) { xhr.setRequestHeader('Mobile', user.Mobile); xhr.setRequestHeader('PasswordMD5', user.PasswordMD5); } },
+                    error: function (xhr, errorMsg)
+                    {
+                        alert("服务器响应错误:" + errorMsg);
+                    }
+                });
+            }
+            catch (error)
+            {
+                alert(error.toString());
+            }
+        }
+
+        function deleteHousePicture(picId)
+        {
+            try
+            {
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: ServiceAddress.PICTURE_DELETE,
+                    data: { picid: picId },
+                    success: function (response)
+                    {
+                        if (response != null && response.errorCode != undefined)
+                        {
+                            if (parseInt(response.errorCode) > 0)
+                            {
+                                var picinfo = document.getElementById("pic_" + response.errorCode);
+                                picinfo.parentNode.removeChild(picinfo);
+                                alert("删除成功");
+                            }
+                            else
+                            {
+                                alert(response.errorMsg);
+                            }
+                            return;
+                        }
+
+                        alert("删除失败");
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "json",
+                    beforeSend: function (xhr) { var user = getLocalUserInfo(); if (user) { xhr.setRequestHeader('Mobile', user.Mobile); xhr.setRequestHeader('PasswordMD5', user.PasswordMD5); } },
+                    error: function (xhr, errorMsg)
+                    {
+                        alert("不能删除:" + errorMsg);
+                    }
+                });
+            }
+            catch (error)
+            {
+                document.getElementById("loginMsg").innerHTML = error.toString();
+            }
+        }
+
+        var selectToInit = new Object();
+        selectToInit["zonelist"] = false;
+        selectToInit["aspectlist"] = false;
+        selectToInit["decorationlist"] = false;
+        selectToInit["structlist"] = false;
+
+        function initSelectOptions()
+        {
+            getSelectOptionList("zonelist", "zoneId");
+            getSelectOptionList("aspectlist", "aspectId");
+            getSelectOptionList("decorationlist", "decorationId");
+            getSelectOptionList("structlist", "structId");
+        }
+
+        function checkAllSelectOK()
+        {
+            if (selectToInit["zonelist"] && selectToInit["aspectlist"] && selectToInit["decorationlist"] && selectToInit["structlist"])
+            {
+                getHouseInfo();
+            }
+        }
+
+        function getSelectOptionList(method, selectId)
+        {
+            try
+            {
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: ServiceAddress.GET_SELECTS,
+                    data: { 'method': method, 'nolimit' : 'true' },
+                    success: function (options)
+                    {
+                        document.getElementById(selectId).innerHTML = options;
+                        selectToInit[method] = true;
+                        checkAllSelectOK();
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "html",
+                    error: function (xhr, err)
+                    {
+                        alert(err);
+                        selectToInit[method] = true;
+                        checkAllSelectOK();
+                    }
+                });
+            }
+            catch (error)
+            {
+                alert(error.toString());
+            }
+        }
+
+        function getHouseInfo()
+        {
+            var houseid = 0;
+
+            if (HouseInfo != undefined)
+            {
+                houseid = HouseInfo.getHouseId();
+            }
+            try
+            {
+                $.ajax({
+                    type: 'GET',
+                    cache: false,
+                    url: ServiceAddress.HOUSE_DETAIL,
+                    data : {houseid : houseid, edit : 'true'},
+                    success: function (houseinfo)
+                    {
+                        if(houseinfo != null && houseinfo.SessionId)
+                        {
+                            ActivityObject.setSessionCookie("ASP.NET_SessionId=" + houseinfo.SessionId);
+                            initHouseInfo(houseinfo);
+                            initImagelist(houseinfo.ThumbPictures);
+                            document.getElementById("loadding").style.display = "none";
+                        }
+                        else
+                        {
+                            alert(houseinfo.errorMsg);
+                            if(houseinfo.errorCode == '-95')
+                            {
+                                ActivityManager.finishSelf();
+                            }
+                        }
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "json",
+                    beforeSend: function (xhr) { var user = getLocalUserInfo(); if (user) { xhr.setRequestHeader('Mobile', user.Mobile); xhr.setRequestHeader('PasswordMD5', user.PasswordMD5); } },
+                    error: function (xhr,err)
+                    {
+                        alert("加载错误:" + err);
+                    }
+                });
+            }
+            catch (error)
+            {
+                alert(error.toString());
+            }
+        }
+
+        function swapeInfo(obj)
+        {
+            var objHouseInfo = document.getElementById("linkHouseInfo");
+            var objHousePic = document.getElementById("linkHousePic");
+            var imagelist = document.getElementById("imagelist");
+            var houseinfo = document.getElementById("houseinfo_container");
+
+
+            if(obj == objHouseInfo)
+            {
+                obj.className = "btn btn-xs btn-success";
+                objHousePic.className = "btn btn-xs btn-default";
+                imagelist.style.display = "none";
+                houseinfo.style.display = "";
+            }
+            else
+            {
+                obj.className = "btn btn-xs btn-success";
+                objHouseInfo.className = "btn btn-xs btn-default";
+                imagelist.style.display = "";
+                houseinfo.style.display = "none";
+            }
+        }
+
+    </script>
+</head>
+<body>
+	<header>
+        <a id="linkHouseInfo" href="#none" class="btn btn-xs btn-success" style="font-size:0.16rem;" onclick="javascript:swapeInfo(this)">房源信息</a> <a id="linkHousePic" href="#none" class="btn btn-xs btn-default" style="font-size:0.16rem;" onclick="javascript:swapeInfo(this)">房源海报</a>
+    </header>
+    <div id="imagelist"></div>
+    <div id="houseinfo_container">
+        <div class="house_info_row"><div class="cell">标题:</div><div class="cell" style="font-weight:bold"><input class="form-control" type="text" id="housetitle" name="housetitle" /></div></div>
+        <div class="house_info_row"><div class="cell">小区:</div><div class="cell"><input class="form-control" type="text" id="buildingName" name="buildingName" /></div></div>
+        <div class="house_info_row"><div class="cell">地址:</div><div class="cell"><input class="form-control" type="text" id="address" name="address" /></div></div>
+        <div class="house_info_row"><div class="cell">面积:</div><div class="cell"><input class="form-control" type="number" id="areasize" name="areasize" /></div><div class="cell">㎡</div></div>
+        <div class="house_info_row"><div class="cell">楼层:</div><div class="cell"><table cellpadding="0" cellspacing="0" style="margin:0px;padding:0px;outline:0px;" border="0"><tr height="0" style="padding:0px;margin:0px;"><td style="padding:0px;margin:0px;"><input class="form-control" type="number" id="floorNum" name="floorNum" style="width:1rem;" /></td><td><label>/</label></td><td><input class="form-control" style="width:1rem;" type="number" id="floorTotal" name="floorTotal" /></td><td><label>层</label></td></tr></table></div></div>
+        <div class="house_info_row"><div class="cell">类型:</div><div class="cell"><select id="joinTypeId" class="form-control"><option value="1">代理</option><option value="2">业主</option><option value="3">合作</option></select></div></div>
+        <div class="house_info_row"><div class="cell">区域:</div><div class="cell"><select id="zoneId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">朝向:</div><div class="cell"><select id="aspectId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">户型:</div><div class="cell"><select id="structId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">装修:</div><div class="cell"><select id="decorationId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">积分:</div><div class="cell"><input class="form-control" type="number" id="rank" name="rank" /></div></div>  
+        <div class="house_info_row"><div class="cell">户主:</div><div class="cell"><input class="form-control" type="text" id="customName" name="customName" /></div></div>        
+        <div class="house_info_row"><div class="cell">电话:</div><div class="cell"><table cellpadding="0" cellspacing="0" border="0"><tr><td><select id="isCustomTel" class="form-control" style="margin-right:0.2rem;width:1rem;"><option value="true">房主</option><option value="false">业务员</option></select></td><td><input class="form-control" type="tel" id="customTel" name="customTel" style="width:1.7rem;" /></td></tr></table></div></div>
+        <div class="house_info_row"><div class="cell">租金:</div><div class="cell"><table cellpadding="0" cellspacing="0" border="0"><tr><td>￥</td><td><input class="form-control" type="number" id="monthPrice" name="monthPrice" style="width:1rem;" /></td><td style="width:0.8rem;"> [月付]</td></tr></table></div></div>
+        <div class="house_info_row"><div class="cell">租金:</div><div class="cell"><table cellpadding="0" cellspacing="0" border="0"><tr><td>￥</td><td><input class="form-control" type="number" id="threeMonthPrice" name="threeMonthPrice" style="width:1rem;" /></td><td style="width:0.8rem;"> [季付]</td></tr></table></div></div>
+        <div class="house_info_row"><div class="cell">租金:</div><div class="cell"><table cellpadding="0" cellspacing="0" border="0"><tr><td>￥</td><td><input class="form-control" type="number" id="halfYearPrice" name="halfYearPrice" style="width:1rem;" /></td><td style="width:0.8rem;"> [半年付]</td></tr></table></div></div>
+        <div class="house_info_row"><div class="cell">租金:</div><div class="cell"><table cellpadding="0" cellspacing="0" border="0"><tr><td>￥</td><td><input class="form-control" type="number" id="yearPrice" name="yearPrice" style="width:1rem;" /></td><td style="width:0.8rem;"> [年付]</td></tr></table></div></div>   
+        <div class="house_info_row"><div class="cell">合同:</div><div class="cell"><input class="form-control" type="text" id="contractCode" name="contractCode" /></div></div>
+        <div class="house_info_row"><div class="cell">到期:</div><div class="cell"><input class="form-control" type="date" id="completeDate" name="completeDate" /></div></div>
+        <div class="house_info_row"><div class="cell">出租:</div><div class="cell"><select id="isCompleted" name="isCompleted" class="form-control"><option value="false">未出租</option><option value="true">已出租</option></select></div></div>
+        <div class="house_info_row" style="height:1rem;"><div class="cell" style="height:1rem;">备注:</div><div class="cell" style="height:1rem;"><textarea class="form-control" style="height:0.8rem;" id="comment"></textarea></div></div>
+        <div class="house_info_row"><div class="cell">报修:</div><div class="cell"><input id="cbIsInError" type="checkbox" onchange="javascript: { document.getElementById('rowErrorMessage').style.display=((this.checked)? '' : 'none');}" /><label for="cbIsInError">报修处理</label></div></div>
+        <div class="house_info_row" style="height:1rem;display:none" id="rowErrorMessage"><div class="cell">描述:</div><div class="cell" style="height:1rem;"><textarea class="form-control" style="height:0.8rem;" id="errorMessage"></textarea></div></div>
+        <div class="house_info_row" style="text-align:center"><a href="javascript:{saveHouseInfo();}" class="btn btn-xs btn-success" style="height:0.35rem;line-height:0.35rem;font-size:0.22rem;width:80%">保存信息</a></div>
+    </div>
+    <div id="loadding" style="background-color:white;position:absolute;top:0.4rem;bottom:0rem;left:0rem;right:0rem;background-image:url('img/loadding.png');background-repeat:no-repeat;background-position:center center;">
+    </div>
+    <script>
+        initSelectOptions();
+        (function (doc, win)
+        {
+            var docEl = doc.documentElement,
+              resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+              recalc = function ()
+              {
+                  var clientWidth = docEl.clientWidth;
+                  if (!clientWidth) return;
+                  docEl.style.fontSize = 100 * (clientWidth / 480) + 'px';
+              };
+
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false);
+        })(document, window);
+    </script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jQuery.md5.js"></script>
+    <script src="js/config.js"></script>
+    <style type="text/css">
+        html {
+            font-size: 100px;
+        }
+    </style>
+</head>
+<body>
+    <script language="javascript">
+        function showLoginScence()
+        {
+            var dis = new Date().getTime() - initTime;
+
+            var intervalTime = (3000 - dis);
+            if (intervalTime > 3000)
+            {
+                intervalTime = 3000;
+            }
+            else if (intervalTime < 100)
+            {
+                intervalTime = 500;
+            }
+
+            setTimeout(function () { $("#loaddingScence").hide(); }, intervalTime);
+        }
+        function login(phone, password, isBackground)
+        {
+            try
+            {
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: ServiceAddress.LOGIN,
+                    data: { phoneNumber: phone, password: ((isBackground)? password : $.md5(password))},
+                    success: function (userinfo)
+                    {
+                        if (userinfo.Mobile != undefined)
+                        {
+                            document.getElementById("loginMsg").innerHTML = "登录成功";
+
+                            if (isBackground == false)
+                            {
+                                UtilityObject.saveUserInfoIntoRes(userinfo.UserId, userinfo.Username, userinfo.Mobile, $.md5(password), userinfo.RoleName, userinfo.DepartmentName, userinfo.CreateDate, userinfo.LastLoginDate);
+                            }                      
+
+                            ActivityManager.startActivity("huayuanjiahe.com", "huayuanjiahe.com.MenuActivity");
+                            ActivityManager.finishSelf();
+
+                        }
+                        else
+                        {
+                            if (isBackground)
+                            {
+                                showLoginScence();
+                            }
+                            else
+                            {
+                                document.getElementById("loginMsg").innerHTML = "用户名或者密码错误";
+                            }
+                        }
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "json",
+                    error: function (xhr, err)
+                    {
+                        showLoginScence();
+                    }
+                });
+            }
+            catch (error)
+            {
+                document.getElementById("loginMsg").innerHTML = error.toString();
+            }
+        }
+
+
+    </script>
+    <div id="loaddingScence" style="background-color:orange;position:fixed;top:0px;left:0px;width:100%;height:100%;color:white;font-size:0.7rem;vertical-align:middle;line-height:5rem;text-align:center">
+		<img src='img/logo.png' style='width:80%;height:auto;'>
+	</div>
+    <div style="width:4rem;border:0px solid red;height:2rem;margin:auto;padding-top:0.7rem;vertical-align:middle;text-align:center;font-size:0.6rem">登录华远嘉禾</div>
+    <div style="width:3rem;height:0.5rem;font-size:0.3rem;margin:auto">您的手机号码：</div>
+    <input type="text" id="myPhone" class="form-control" style="width:4rem;height:0.5rem;font-size:0.3rem;margin:auto;" />
+    <div style="width:4rem;height:0.5rem;font-size:0.3rem;margin:auto"></div>
+    <div style="width:4rem;height:0.5rem;font-size:0.3rem;margin:auto">您的登录口令：</div>
+    <input type="password" id="password" class="form-control" style="width:4rem;height:0.5rem;font-size:0.3rem;margin:auto;" />
+    <div style="width:3rem;height:0.5rem;font-size:0.3rem;height:0.9rem;margin:auto;color:red;text-align:center" id="loginMsg"></div>
+    <div style="width:4rem;height:0.5rem;font-size:0.3rem;margin:auto">
+        <input type="button" onclick="javascript:login($('#myPhone').val(), $('#password').val(), false);" class="btn btn-warning" style="width:4rem;height:0.5rem;font-size:0.3rem;margin:auto;" value="登录系统" />
+    </div>
+    <script>
+        var initTime = new Date().getTime();
+
+        $(document).ready(function ()
+        {
+            var jsonStr = "null";
+
+            try
+            {
+                jsonStr = UtilityObject.getUserInfoFromRes();
+            }
+            catch (err)
+            { }
+
+            var user = null;
+
+            try
+            {
+                user = jQuery.parseJSON(jsonStr);
+            }
+            catch(err)
+            {
+                document.getElementById("loginMsg").innerHTML += "evalerror:" + err.toString();
+            }
+
+            if (user != null && user.Mobile != null && user.PasswordMD5 != null)
+            {
+                login(user.Mobile, user.PasswordMD5, true);
+            }
+            else
+            {
+                showLoginScence();
+            }
+        });
+
+        (function (doc, win)
+        {
+            var docEl = doc.documentElement,
+              resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+              recalc = function ()
+              {
+                  var clientWidth = docEl.clientWidth;
+                  if (!clientWidth) return;
+                  docEl.style.fontSize = 100 * (clientWidth / 500) + 'px';
+              };
+
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false);
+        })(document, window);
+    </script>
+</body>
+</html>

@@ -1,0 +1,834 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title></title>
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/config.js"></script>
+    <style>
+	
+@font-face
+{
+	font-family:yh;
+	src:url("fonts/glyphicons-halflings-regular.ttf");
+}
+        * {
+            font-family: 'Microsoft YaHei','yh';
+        }
+
+        html 
+        {
+            height: 100%;
+            width: 100%;
+            font-family: 'Microsoft YaHei','Heiti SC';
+            font-size: 100px;
+            overflow: hidden;
+            outline: 0;
+            -webkit-text-size-adjust: none;
+        }
+
+        body 
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        header 
+        {
+            width: 100%;
+            background-color: #2f2929;
+            height: 0.5rem;
+            font-size: 0.18rem;
+            color: white;
+            position: fixed;
+            left: 0px;
+            right: 0px;
+            line-height: 0.5rem;
+            padding-left: 0.2rem;
+            z-index:101;
+        }
+
+        header .anchorToTop
+        {
+            height:0.4rem;
+            width:0.6rem;
+            float:right;
+            display:block;
+            color:white;
+            font-size:0.18rem;
+        }
+
+        footer 
+        {
+            width: 100%;
+            background-color: #efefef;
+            height: 0.6rem;
+            font-size: 0.4rem;
+            color: #808080;
+            border-top: 1px solid #cccccc;
+            position: fixed;
+            left: 0px;
+            bottom: 0px;
+            line-height: 0.6rem;
+            z-index:99;
+        }
+
+        .datalist 
+        {
+            width: 100%;
+            max-height: 100%;
+            overflow-y: auto;
+            position: absolute;
+            top: 0.5rem;
+            bottom: 0.6rem;
+        }
+
+        .houseinfo,.houseinfo_click
+        {
+            border-bottom: 1px solid #efefef;
+            height: 1.2rem;
+            padding: 0px 0.1rem;
+            vertical-align: middle;
+            padding-top: 0.18rem;
+            background-color:#ffffff;
+        }
+
+        .houseinfo_click
+        {
+            background-color:#efefef;
+        }
+
+        .houseinfo .pic 
+        {
+            width: 1.1rem;
+            height: 0.8rem;
+            float: left;
+            display: block;
+            border-radius:0.05rem;
+        }
+
+        .houseinfo .houseinfo_middle 
+        {
+            float: left;
+            font-size: 0.22rem;
+            height: 1.0rem;
+            float: left;
+            width: 2.0rem;
+            border: 0px solid red;
+        }
+
+        .houseinfo .houseinfo_price 
+        {
+            float: right;
+            display: block;
+            vertical-align: middle;
+            height: 0.8rem;
+            font-size: 0.2rem;
+            width: 0.8rem;
+            border:0px solid blue;
+            padding-top:0.1rem;
+        }
+
+        .houseinfo .houseinfo_price .price, .houseinfo .houseinfo_price .unit 
+        {
+            margin: 0px;
+            padding: 0px;
+            line-height: 0.3rem;
+            text-align: center;
+            color: orange;
+        }
+
+         .houseinfo .houseinfo_price .price 
+         {
+             font-weight:bold;
+         }
+
+        .houseinfo .houseinfo_price .unit 
+        {
+            color: #808080;
+        }
+
+        .houseinfo .houseinfo_middle .p1, 
+        .houseinfo .houseinfo_middle .p2,
+        .houseinfo .houseinfo_middle .p3
+        {
+            padding: 0rem;
+            margin: 0.06rem;
+            font-size:0.18rem;
+            overflow:hidden;
+            white-space:nowrap;
+            font-weight:bold;
+            border:0px solid blue
+        }
+
+        .houseinfo .houseinfo_middle .p1
+        {
+            margin-top:0rem;
+        }
+
+        .houseinfo .houseinfo_middle .p2,
+        .houseinfo .houseinfo_middle .p3
+        {
+            font-size:0.16rem;
+            font-weight:normal;
+        }
+
+        .houseinfo .houseinfo_middle .p3 label
+        {
+            margin-right:0.1rem;
+        }
+
+        #customlist_container #customLoaddingMsg, #houselist_container #houseLoaddingMsg
+        {
+            font-size:0.18rem;
+            text-align:center;
+            color:#808080;
+            padding:0.1rem 0rem;
+        }
+
+        .custominfo, .custominfo_focus
+        {
+            width:100%;
+            display:block;
+            overflow:hidden;
+            padding:0.1rem;
+            border-bottom:1px dashed #c0c0c0;
+            font-size:0.18rem;
+        }
+
+        .custominfo a, .custominfo_focus a
+        {
+            font-size:0.18rem;
+            height:0.25rem;
+            line-height:0.23rem;
+        }
+
+        .custominfo .tools
+        {
+            display:none;
+        }
+
+         .custominfo_focus .tools
+         {
+             display:normal;
+         }
+
+        .custom_need
+        {
+            display:block;
+            background-color:#f0f0f0;
+            margin:0.05rem;
+            padding:0.05rem;
+            float:left;
+            border-radius:0.1rem;
+            font-size:0.18rem;
+        }
+    </style>
+    <script>
+        var _alert = window.alert;
+        window.alert = function (msg)
+        {
+            if (typeof(UtilityObject) == "object")
+                UtilityObject.toast(msg);
+            else
+                _alert(msg);
+        }
+
+        function errorResponse(errorCode, errorMsg)
+        {
+            alert("加载失败:" + errorMsg);
+        }
+
+        function datalist()
+        {
+            this.currPage = 0;
+            this.isLoadding = false;
+            this.allPageLoaded = false;
+            this.allPageLoadedInfoAlertTimer = 0;
+            this.ajaxRequest = null;
+            this.loadingMsgHTMLId = null;
+            this.datalistHTMLId = null;
+            this.configHTMLId = null;
+            this.hasDataInList = false;
+            this.serviceURL = null;
+            this.callerName = null;
+
+            this.init = function(serviceURL, datalistHTMLId, loadingMsgHTMLId, configHTMLId, callerName)
+            {
+                this.serviceURL = serviceURL;
+                this.loadingMsgHTMLId = loadingMsgHTMLId;
+                this.datalistHTMLId = datalistHTMLId;
+                this.configHTMLId = configHTMLId;
+                this.callerName = callerName;
+                this.hasDataInList = false;
+            }
+
+            this.setAllPageLoaded = function(loaded)
+            {
+                this.allPageLoaded = loaded;
+
+                if (loaded)
+                {
+                    //如果全部数据都已经加载完成，即当前是最后一页
+                    document.getElementById(this.loadingMsgHTMLId).innerHTML = "全部数据都已经加载完成啦";
+                    //显示完所有数据加载完毕后，3秒后，该提示消失
+                    this.allPageLoadedInfoAlertTimer = setTimeout(function (msgId) { document.getElementById(msgId).innerHTML = ''; document.getElementById(msgId).style.display = "none"; }, 3000, this.loadingMsgHTMLId);
+                }
+                else
+                {
+                    //可能再用户全部加载当前页面后，切换了筛选条件， 得停掉定时器，防止不符合时宜的提示出现
+                    clearTimeout(this.allPageLoadedInfoAlertTimer)
+                    document.getElementById(this.loadingMsgHTMLId).style.display = "";
+                    document.getElementById(this.loadingMsgHTMLId).innerHTML = "正在玩命的加载数据...";
+                }
+            }
+
+            this.clearlist = function()
+            {
+                this.currPage = 0;
+                this.isLoadding = false;
+                this.allPageLoaded = false;
+                this.hasDataInList = false;
+                clearTimeout(this.allPageLoadedInfoAlertTimer);
+                document.getElementById(this.datalistHTMLId).innerHTML = "";
+
+                if(this.ajaxRequest != null)
+                {
+                    this.ajaxRequest.abort();
+                    this.ajaxRequest = null;
+                }
+            }
+
+            //loadlist永远是添加模式，想重头开始，那么请先clearlist
+            this.loadlist = function()
+            {
+                if (this.ajaxRequest != null)
+                {
+                    this.ajaxRequest.abort();
+                    this.ajaxRequest = null;
+                }
+               
+                isLoadding = true;
+                this.setAllPageLoaded(false);
+                var config = this.getConfig();
+                config.caller = this.callerName;
+                config.pageIndex = this.currPage;
+
+                var datalist = this;
+                
+                try
+                {
+                    this.ajaxRequest = $.ajax({
+                        type: 'POST',
+                        cache: false,
+                        url: datalist.serviceURL,
+                        data: config,
+                        success: function (data)
+                        {
+                            if (data != null)
+                            {
+                                $("#" + datalist.datalistHTMLId).append(data);
+                                datalist.hasDataInList = true;
+                            }
+                            else
+                            {
+                                document.getElementById(datalist.loadingMsgHTMLId).innerHTML = "请求的数据内容错误<br/><a href='javascript:loadHouseList()' class='btn btn-success'>重试</a>"
+                            }
+                            datalist.isLoadding = false;
+                        }
+                        ,
+                        xhrFields: { withCredentials: true },
+                        dataType: "html",
+                        beforeSend: function(xhr){var user=getLocalUserInfo();if(user){xhr.setRequestHeader('Mobile', user.Mobile);xhr.setRequestHeader('PasswordMD5', user.PasswordMD5);}},
+                        error: function (xhr, err)
+                        {
+                            document.getElementById(datalist.loadingMsgHTMLId).innerHTML = "数据的加载失败了，网络中断或服务异常<br/><a href='javascript:loadHouseList()' class='btn btn-success'>重试</a>";
+                            datalist.isLoadding = false;
+                        }
+                    });
+                }
+                catch (error)
+                {
+                    document.getElementById(datalist.loadingMsgHTMLId).innerHTML = "catch:" + error.toString();
+                    datalist.isLoadding = false;
+                }
+            }
+
+            this.getConfig = function()
+            {
+                var config = {};
+                //alert($("#selPrice_" + this.datalistHTMLId).val());
+                config.joinType = $("#selJoinType_" + this.datalistHTMLId).val();
+                config.zoneId = $("#selZone_" + this.datalistHTMLId).val();
+                config.aspectId = $("#selAspect_" + this.datalistHTMLId).val();
+                config.structId = $("#selRoomStruct_" + this.datalistHTMLId).val();
+                config.decorationId = $("#selDecoration_" + this.datalistHTMLId).val();
+                config.priceMin = $("#selPrice_" + this.datalistHTMLId).val().split('-')[0];
+                config.priceMax = $("#selPrice_" + this.datalistHTMLId).val().split('-')[1];
+                config.completeStatus = $("#selCompleteStatus_" + this.datalistHTMLId).val();
+                config.errorStatus = $("#selErrorStatus_" + this.datalistHTMLId).val();
+                config.areaSizeMin = $("#selAreaSize_" + this.datalistHTMLId).val().split('-')[0];
+                config.areaSizeMax = $("#selAreaSize_" + this.datalistHTMLId).val().split('-')[1];
+
+                if ($("#keyword_" + this.datalistHTMLId))
+                config.keyword = $("#keyword_" + this.datalistHTMLId).val().trim();
+                return config;
+            }
+            
+        }
+ 
+
+        function onImageLoaded(localImgUrl, imgId)
+        {
+            var im = document.getElementById(imgId);
+
+            if (im != null)
+            {
+                im.onload = null;
+                im.src = localImgUrl;
+            }
+        }
+
+        function loadImage(imageUrl, imgId)
+        {
+            if (imageUrl == null)
+                return;
+            //解决多个thumb__noinfo，导致ImageLoader不能回调的问题，直接转换为本地图片路径
+            if (imageUrl.indexOf("thumb_noinfo.jpg") != -1)
+            {
+                onImageLoaded("img/thumb_noinfo.jpg", imgId);
+                return;
+            }
+
+            if (typeof (ImageProvider) == "object")
+                ImageProvider.load(imageUrl, imgId);
+        }
+
+        function updatePageInfo(pageCurr, pageTotal)
+        {
+            //$("#pageInfo").html("(" + pageCurr + "/" + pageTotal + "页)");
+        }
+
+        function on_datalist_scroll(container, loader)
+        {
+            //如果当前的全部数据都加载好了，那就没必要走后面逻辑了
+            if (loader.allPageLoaded == true)
+                return;
+            
+            //如果是到底了
+            if (container.scrollTop > 0 && (container.scrollTop + container.offsetHeight) >= (container.scrollHeight - 2))
+            {
+                //当前的page数增1
+                loader.currPage += 1;
+                if (loader.isLoadding == false)
+                {
+                    loader.loadlist();
+                }
+            }
+        }
+
+        function showHouse(house, houseId)
+        {
+            if(typeof (ActivityManager) == "object")
+            ActivityManager.startActivity("huayuanjiahe.com", "huayuanjiahe.com.DetailActivity", "house_id", houseId.toString());
+        }
+
+        var houseloader = new datalist();
+        houseloader.init(ServiceAddress.HOUSE_LIST, "houselist", "houseLoaddingMsg", null, "houseloader");
+
+
+        var customloader = new datalist();
+        customloader.init(ServiceAddress.CUSTOM_LIST, "customlist", "customLoaddingMsg", null, "customloader");
+
+        function closeMenu(menu)
+        {
+            if(event.target == menu)
+            {
+                menu.style.display = "none";
+            }
+        }
+
+        function openMenu()
+        {
+            var menuID = null;
+            if(document.getElementById('houselist_container').style.display != "none")
+                menuID = "#houseMenuOptions";
+            else if(document.getElementById('customlist_container').style.display != "none")
+                menuID = "#customMenuOptions";
+
+            if(menuID == null)
+                return;           
+            
+            $(menuID).css('bottom', 0 - document.documentElement.clientHeight + 'px');
+            $(menuID).show();
+            $(menuID).animate({ 'bottom': '0px' }, 'fast', function ()
+            {
+                
+            });
+            
+        }
+
+        function selectCustom(customDiv)
+        {
+            if (event.target.nodeName.toLowerCase() != "div")
+                return;
+
+            var container = customDiv.parentNode;
+
+            for(var i = 0; i < container.childNodes.length; i++)
+            {
+                var cNode = container.childNodes[i];
+                if (cNode.nodeName.toLowerCase() == "div")
+                {
+                    cNode.className = "custominfo";
+                }                
+            }
+
+            customDiv.className = "custominfo_focus";
+        }
+
+        function deleteCustom(cid)
+        {
+            $.ajax({
+                type: 'POST',
+                cache: false,
+                url: ServiceAddress.HOUSE_DELETE,
+                data: { houseid: cid, method: "delete_custom" },
+                success: function (data)
+                {
+                    if (data != null)
+                    {
+                        if (parseInt(data.errorCode) > 0)
+                        {
+                            UtilityObject.toast("删除成功");
+                            var cinfo = document.getElementById("custom_" + cid);
+                            cinfo.parentNode.removeChild(cinfo);
+                        }
+                        else
+                        {
+                            UtilityObject.toast(data.errorMsg);
+                        }
+                        return;
+                    }
+
+                    UtilityObject.toast("删除失败")
+                }
+                 ,
+                xhrFields: { withCredentials: true },
+                dataType: "json",
+                beforeSend: function (xhr) { var user = getLocalUserInfo(); if (user) { xhr.setRequestHeader('Mobile', user.Mobile); xhr.setRequestHeader('PasswordMD5', user.PasswordMD5); } },
+                error: function (x, err)
+                {
+                    UtilityObject.toast(err);
+                }
+            });
+        }
+
+        function editCustom(cid)
+        {
+            ActivityManager.startActivity("huayuanjiahe.com", "huayuanjiahe.com.EditCustom", "house_id", cid);
+        }
+    </script>
+
+</head>
+
+<body>
+    <header>
+        <font id="pageInfo">房源信息</font>
+        <a href="javascript:openMenu()" class="anchorToTop">菜单</a></header>
+    <div id="houselist_container" class="datalist" onscroll="javascript: on_datalist_scroll(this, houseloader);">
+        <div id="houselist"></div>
+        <div id="houseLoaddingMsg"></div>
+    </div>
+    <div id="customlist_container" class="datalist"  onscroll="javascript: on_datalist_scroll(this, customloader);" style="display:none">
+        <div id="customlist"></div>
+        <div id="customLoaddingMsg"></div>
+    </div>
+    <div id="houseMenuOptions" onclick="closeMenu(this)" style="display:none;position:absolute;z-index:100;top:0px;left:0px;width:100%;height:100%;">
+        <div style="background-color:white;height:4.5rem;width:100%;position:absolute;bottom:1.3rem;left:0px;border-top:1px solid #cecece;">
+            <div style="width:1.2rem;float:left;">
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">业务类型</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">报修状态</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">出租状态</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">价格区间</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">区域选择</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">朝向选择</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">装修选择</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">格局选择</div>
+                <div style="height:0.5rem;line-height:0.5rem;text-align:center">面积选择</div>
+            </div>
+            <div style="border:0px solid red;width:2.6rem;float:right;">
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selJoinType_houselist" name="selJoinType_houselist" style="height:0.4rem;font-size:0.18rem;">
+                    <option value="0">不限制</option>
+                    <option value="1">代理</option>
+                    <option value="2">业务</option>
+                    <option value="3">合作</option>
+                    </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selErrorStatus_houselist" name="selErrorStatus_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="-1">不限制</option>
+                        <option value="0">未报修</option>
+                        <option value="1">报修中</option>
+                    </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selCompleteStatus_houselist" name="selCompleteStatus_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="-1">不限制</option>
+                        <option value="0">未出租</option>
+                        <option value="1">已出租</option>
+                    </select>
+                </div>
+                <div style="height:0.5rem;line-height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select  class="form-control" id="selPrice_houselist" name="selPrice_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0-0">不限制</option>
+                        <option value="0-1500">1500以下</option>
+                        <option value="1500-2000">1500~2000</option>
+                        <option value="2000-3000">2000~3000</option>
+                        <option value="3000-5000">3000~5000</option>
+                        <option value="5000-8000">5000~8000</option>
+                        <option value="8000-0">8000以上</option>
+                    </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selZone_houselist" name="selzone_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">东城</option>
+                        <option value="2">西城</option>
+                        <option value="3">朝阳</option>
+                        <option value="4">海淀</option>
+                        <option value="5">石景山</option>
+                        <option value="6">丰台</option>
+                        <option value="9">大兴</option>
+                        <option value="10">顺义</option>
+                        <option value="11">昌平</option>
+                        <option value="12">通州</option>
+                        <option value="13">怀柔</option>
+                        <option value="14">门头沟</option>
+                        <option value="16">房山</option>  
+                    </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selAspect_houselist" name="selAspect_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">东</option>
+                        <option value="2">南</option>
+                        <option value="3">西</option>
+                        <option value="4">北</option>
+                        <option value="5">东南</option>
+                        <option value="6">西北</option>
+                        <option value="7">西南</option>
+                        <option value="8">东北</option>
+                        <option value="9">西南</option>
+                    </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selDecoration_houselist" name="selDecoration_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">毛坯</option>
+                        <option value="2">简装</option>
+                        <option value="3">中装</option>
+                        <option value="4">精装</option>
+                        <option value="5">豪装</option>
+                    </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selRoomStruct_houselist" name="selRoomStruct_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">一居</option>
+                        <option value="2">二居</option>
+                        <option value="3">三居</option>
+                        <option value="4">四居以上</option>
+                        <option value="5">开间</option>
+                        <option value="6">主卧</option>
+                        <option value="7">次卧</option>
+                        <option value="8">阳隔</option>
+                        <option value="9">明隔</option>
+                        <option value="10">暗间</option>
+                        </select>
+                </div>
+                <div style="height:0.5rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selAreaSize_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0-0">不限制</option>
+                        <option value="0-10">10㎡以下</option>
+                        <option value="10-30">10㎡~30㎡</option>
+                        <option value="30-50">30㎡~50㎡</option>
+                        <option value="50-70">50㎡~70㎡</option>
+                        <option value="70-90">70㎡~90㎡</option>
+                        <option value="90-0">90㎡以上</option>
+                    </select>             
+                </div>
+            </div>
+        </div>
+        <div style="background-color:white;height:0.7rem;width:100%;position:absolute;bottom:0.6rem;border-top:1px solid #cecece;">
+            <div style="height:0.7rem;width:23%;display:table-cell;vertical-align:middle;text-align:center">关键字</div>
+            <div style="padding:0px 0.2rem;height:0.7rem;width:75%;display:table-cell;vertical-align:middle;text-align:center"><input type="text" id="keyword_houselist" class="form-control" style="height:0.4rem;" placeholder="标题、小区名、地址关键字" /></div>
+        </div>
+        <div style="position:absolute;bottom:0rem;left:0px;background-color:white;height:0.6rem;width:100%;text-align:center;border-top:1px solid #cecece;padding-top:0.1rem;">
+            <a href="#none" onclick="javascript: { $('#houseMenuOptions').css('bottom', 0 - document.documentElement.clientHeight + 'px'); $('#houseMenuOptions').hide(); houseloader.clearlist(); houseloader.loadlist(); }" class="btn btn-success" style="height:0.4rem;width:4rem;font-size:0.2rem;line-height:0.2rem;">确　定</a>
+        </div>
+    </div>
+    <div id="customMenuOptions" onclick="closeMenu(this)" style="display:none;position:absolute;z-index:100;bottom:0px;left:0px;width:100%;height:100%;">
+        <div style="display:none;background-color:white;height:0.7rem;width:100%;position:absolute;bottom:4.9rem;border-bottom:1px solid #cecece;border-top:1px solid #cecece;">
+            <div style="height:0.7rem;width:23%;display:table-cell;vertical-align:middle;text-align:center">关键字</div>
+            <div style="padding:0px 0.2rem;height:0.7rem;width:75%;display:table-cell;vertical-align:middle;text-align:center"><input type="text" id="keyword_customlist" class="form-control" style="height:0.4rem;" placeholder="标题、小区名、地址关键字" /></div>
+        </div>
+        <div style="background-color:white;height:3.7rem;width:100%;border-bottom:0px solid #cecece;position:absolute;bottom:0.6rem;left:0px;border-top:1px solid #cecece;">
+            <div style="width:1.2rem;float:left;">
+                <div style="display:none;height:0.6rem;line-height:0.6rem;text-align:center">业务类型</div>
+                <div style="height:0.6rem;line-height:0.6rem;text-align:center">价格区间</div>
+                <div style="height:0.6rem;line-height:0.6rem;text-align:center">区域选择</div>
+                <div style="height:0.6rem;line-height:0.6rem;text-align:center">朝向选择</div>
+                <div style="height:0.6rem;line-height:0.6rem;text-align:center">装修选择</div>
+                <div style="height:0.6rem;line-height:0.6rem;text-align:center">格局选择</div>
+                <div style="height:0.6rem;line-height:0.6rem;text-align:center">面积选择</div>
+            </div>
+            <div style="border:0px solid red;width:2.6rem;float:right;">
+                <div style="display:none;height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selJoinType_houselist" name="selJoinType_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">代理</option>
+                        <option value="2">业务</option>
+                        <option value="3">合作</option>
+                    </select>
+                </div>
+                <div style="display:none;height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selErrorStatus_customlist" name="selErrorStatus_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="-1">不限制</option>
+                        <option value="0">未报修</option>
+                        <option value="1">报修中</option>
+                    </select>
+                </div>
+                <div style="display:none;height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selErrorStatus_customlist" name="selErrorStatus_houselist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="-1">不限制</option>
+                        <option value="0">未出租</option>
+                        <option value="1">已出租</option>
+                    </select>
+                </div>
+                <div style="height:0.6rem;line-height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selPrice_customlist" name="selPrice_customlist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0-0">不限制</option>
+                        <option value="0-1500">1500以下</option>
+                        <option value="1500-2000">1500~2000</option>
+                        <option value="2000-3000">2000~3000</option>
+                        <option value="3000-5000">3000~5000</option>
+                        <option value="5000-8000">5000~8000</option>
+                        <option value="8000-0">8000以上</option>
+                    </select>
+                </div>
+                <div style="height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selZone_customlist" name="selzone_customlist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">东城</option>
+                        <option value="2">西城</option>
+                        <option value="3">朝阳</option>
+                        <option value="4">海淀</option>
+                        <option value="5">石景山</option>
+                        <option value="6">丰台</option>
+                        <option value="9">大兴</option>
+                        <option value="10">顺义</option>
+                        <option value="11">昌平</option>
+                        <option value="12">通州</option>
+                        <option value="13">怀柔</option>
+                        <option value="14">门头沟</option>
+                        <option value="16">房山</option>
+                    </select>
+                </div>
+                <div style="height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selAspect_customlist" name="selAspect_customlist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">东</option>
+                        <option value="2">南</option>
+                        <option value="3">西</option>
+                        <option value="4">北</option>
+                        <option value="5">东南</option>
+                        <option value="6">西北</option>
+                        <option value="7">西南</option>
+                        <option value="8">东北</option>
+                        <option value="9">西南</option>
+                    </select>
+                </div>
+                <div style="height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selDecoration_customlist" name="selDecoration_customlist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">毛坯</option>
+                        <option value="2">简装</option>
+                        <option value="3">中装</option>
+                        <option value="4">精装</option>
+                        <option value="5">豪装</option>
+                    </select>
+                </div>
+                <div style="height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selRoomStruct_customlist" name="selRoomStruct_customlist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0">不限制</option>
+                        <option value="1">一居</option>
+                        <option value="2">二居</option>
+                        <option value="3">三居</option>
+                        <option value="4">四居以上</option>
+                        <option value="5">开间</option>
+                        <option value="6">主卧</option>
+                        <option value="7">次卧</option>
+                        <option value="8">阳隔</option>
+                        <option value="9">明隔</option>
+                        <option value="10">暗间</option>
+                    </select>
+                </div>
+                <div style="height:0.6rem;padding:0.1rem 0.3rem 0rem 0rem;">
+                    <select class="form-control" id="selAreaSize_customlist" style="height:0.4rem;font-size:0.18rem;">
+                        <option value="0-0">不限制</option>
+                        <option value="0-10">10㎡以下</option>
+                        <option value="10-30">10㎡~30㎡</option>
+                        <option value="30-50">30㎡~50㎡</option>
+                        <option value="50-70">50㎡~70㎡</option>
+                        <option value="70-90">70㎡~90㎡</option>
+                        <option value="90-0">90㎡以上</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div style="position:absolute;bottom:0rem;left:0px;background-color:white;height:0.6rem;width:100%;text-align:center;border-top:1px solid #cecece;padding-top:0.1rem;">
+            <a href="#none" onclick="javascript: { $('#customMenuOptions').css('bottom', 0 - document.documentElement.clientHeight + 'px'); $('#customMenuOptions').hide(); customloader.clearlist(); customloader.loadlist(); }" class="btn btn-success" style="height:0.4rem;width:4rem;font-size:0.2rem;line-height:0.2rem;">确　定</a>
+        </div>
+    </div>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-1"><i class="fa fa-eraser"></i></div>
+                <div class="col-xs-2" style="font-size:0.2rem;text-align:center" onclick="$('#customlist_container').hide();$('#houselist_container').show();$('#pageInfo').html('房源信息')">房源</div>
+                <div class="col-xs-2" style="font-size:0.2rem;text-align:center" onclick="$('#customlist_container').show(); $('#houselist_container').hide();$('#pageInfo').html('客源信息')">客源</div>
+                <div class="col-xs-2" style="font-size:0.2rem;text-align:center" onclick="ActivityManager.startActivity('huayuanjiahe.com', 'huayuanjiahe.com.CreateHouse');">录房</div>
+                <div class="col-xs-2" style="font-size:0.2rem;text-align:center" onclick="ActivityManager.startActivity('huayuanjiahe.com', 'huayuanjiahe.com.CreateCustom');">录客</div>
+                <div class="col-xs-2" style="font-size:0.2rem;text-align:center" onclick="ActivityManager.startActivity('huayuanjiahe.com', 'huayuanjiahe.com.AboutMe');">我的</div>
+                <div class="col-xs-1"></div>
+            </div>
+        </div>
+    </footer>
+    <script>
+
+        houseloader.loadlist();
+        customloader.loadlist();
+        (function (doc, win)
+        {
+            var docEl = doc.documentElement,
+              resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+              recalc = function ()
+              {
+                  var clientWidth = docEl.clientWidth;
+                  if (!clientWidth) return;
+                  docEl.style.fontSize = 100 * (clientWidth / 500) + 'px';
+              };
+
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false);
+        })(document, window);
+    </script>
+</body>
+
+</html>

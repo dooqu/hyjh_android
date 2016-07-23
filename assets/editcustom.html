@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title></title>
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/config.js"></script>
+    <style type="text/css">
+        *
+        {
+            font-family: 'Microsoft YaHei','Heiti SC';
+        }
+        html 
+        {
+            height: 100%;
+            width: 100%;
+            font-family: 'Microsoft YaHei','Heiti SC';
+            font-size: 100px;
+            overflow: hidden;
+            outline: 0;
+            -webkit-text-size-adjust: none;
+        }
+
+        body 
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        header 
+        {
+            width: 100%;
+            background-color: #2f2929;
+            height: 0.5rem;
+            font-size: 0.18rem;
+            color: white;
+            position: fixed;
+            left: 0px;
+            right: 0px;
+            line-height: 0.5rem;
+            padding-left: 0.2rem;
+            z-index:99;
+        }
+
+        header a
+        {
+            height:0.3rem;font-size:0.2rem;line-height:0.3rem;
+        }
+
+        #imagelist, #houseinfo_container
+        {
+            width:100%;
+            position:absolute;
+            top:0.5rem;
+            bottom:0rem;
+            left:0px;right:0px;
+        }
+
+ 
+
+          .house_info_row, .content #title {
+            background-color: #fafafa;
+            width: 100vw;
+            height: 0.5rem;
+            border-top: 1px solid #c0c0c0;
+            font-size: 0.2rem;
+            line-height: 0.5rem;
+            padding-left: 0.1rem;
+            margin: 0px;
+        }
+
+        .content #title {
+            border-bottom: 1px solid #c0c0c0;
+        }
+
+        .house_info_row .cell {
+            display: table-cell;
+            padding-left: 0.2rem;
+            vertical-align:middle;
+        }
+
+        .house_info_row .cell input
+        {
+            height:0.3rem;font-size:0.16rem;
+        }
+
+        .house_info_row .cell select
+        {
+            height:0.3rem;font-size:0.16rem;
+        }
+
+         header .returnLink, header .returnLink:focus {
+                height: 0.4rem;
+                float: left;
+                display: block;
+                color: white;
+                font-size: 0.18rem;
+                line-height:0.4rem;
+            }
+        
+    </style>
+    <script language="javascript">
+        var _alert = window.alert;
+        window.alert = function(msg)
+        {
+            try
+            {
+                UtilityObject.toast(msg);
+            }
+            catch (error)
+            {
+                _alert(msg);
+            }              
+        }
+
+
+        function initCustomInfo(houseinfo)
+        {
+            document.getElementById("buildingName").value = houseinfo.BuildingName;
+            document.getElementById("areasize").value = houseinfo.AreaSize;
+            document.getElementById("zoneId").value = houseinfo.ZoneId;
+            document.getElementById("aspectId").value = houseinfo.AspectId;
+            document.getElementById("decorationId").value = houseinfo.DecorationId;
+            document.getElementById("structId").value = houseinfo.StructId;
+            document.getElementById("houseprice").value = houseinfo.Price;
+            document.getElementById("floorNum").value = houseinfo.FloorNum;
+            document.getElementById("customName").value = houseinfo.CustomName;
+            document.getElementById("customTel").value = houseinfo.CustomTel;
+            document.getElementById("isCompleted").value = houseinfo.IsCompleted;
+        }
+
+        function getCustomInfo()
+        {
+            var houseid = 0;
+
+            if (HouseInfo != undefined)
+            {
+                houseid = HouseInfo.getHouseId();
+            }
+
+            try
+            {
+                $.ajax({
+                    type: 'GET',
+                    cache: false,
+                    url: ServiceAddress.HOUSE_DETAIL,
+                    data: { houseid: houseid },
+                    success: function (houseinfo)
+                    {
+                        if (houseinfo != null && houseinfo.SessionId)
+                        {
+                            initCustomInfo(houseinfo);
+                        }
+                        else
+                        {
+                            alert(houseinfo.errorMsg)
+                            if (houseinfo.errorCode == '-95')
+                            {
+                                ActivityManager.finishSelf();
+                            }
+                        }
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "json",
+                    beforeSend: function (xhr) { var user = getLocalUserInfo(); if (user) { xhr.setRequestHeader('Mobile', user.Mobile); xhr.setRequestHeader('PasswordMD5', user.PasswordMD5); } },
+                    error: function (xhr, err)
+                    {
+                        alert("加载错误:" + err);
+                    }
+                });
+            }
+            catch (error)
+            {
+                alert(error.toString());
+            }
+        }
+
+        function saveCustomInfo()
+        {
+            var houseinfoConfig = {
+                houseid : HouseInfo.getHouseId(),
+                buildingName: document.getElementById("buildingName").value,
+                areaSize : document.getElementById("areasize").value,
+                zoneId: document.getElementById("zoneId").value,
+                aspectId: document.getElementById("aspectId").value,
+                decorationId: document.getElementById("decorationId").value,
+                structId: document.getElementById("structId").value,
+                price: document.getElementById("houseprice").value,
+                floorNum: document.getElementById("floorNum").value,
+                customName: document.getElementById("customName").value,
+				isCustomTel : "false",
+                customTel: document.getElementById("customTel").value,
+                isCompleted : document.getElementById("isCompleted").value
+
+            };
+
+            if(houseinfoConfig.customName == "")
+            {
+                alert("求租人信息不能为空");
+                return;                
+            }
+
+            if (houseinfoConfig.customTel == "")
+            {
+                alert("求租人电话不能为空");
+                return;
+            }
+
+
+            if (isNaN(parseInt(houseinfoConfig.areaSize)) == true)
+            {
+                alert("房间面积格式填写不正确");
+                return;
+            }
+
+            if (isNaN(parseInt(houseinfoConfig.price)) == true)
+            {
+                alert("租金填写不正确");
+                return;
+            }
+
+            if (isNaN(parseInt(houseinfoConfig.floorNum)) == true)
+            {
+                alert("楼层填写不正确");
+                return;
+            }
+
+            try
+            {
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: ServiceAddress.HOUSE_UPDATE,
+                    data: houseinfoConfig,
+                    success: function (response)
+                    {
+                        if (response != null && response.errorCode)
+                        {
+                            if (parseInt(response.errorCode) > 0)
+                            {   
+                                alert("客源编辑成功");
+                                if (typeof (ActivityManager) == "object")
+                                {
+                                    ActivityManager.startActivity("huayuanjiahe.com", "huayuanjiahe.com.MenuActivity");
+                                    ActivityManager.finishSelf();
+                                }                                 
+                            }
+                            else
+                            {
+                                alert(response.errorMsg);
+                            }
+                            return;
+                        }
+
+                        alert("服务器响应错误，可能您的信息没有保存");
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "json",
+                    beforeSend: function (xhr) { var user = getLocalUserInfo(); if (user) { xhr.setRequestHeader('Mobile', user.Mobile); xhr.setRequestHeader('PasswordMD5', user.PasswordMD5); } },
+                    error: function (xhr, errorMsg)
+                    {
+                        alert("服务器响应错误:" + errorMsg);
+                    }
+                });
+            }
+            catch (error)
+            {
+                alert(error.toString());
+            }
+        }
+
+ 
+
+        var selectToInit = new Object();
+        selectToInit["zonelist"] = false;
+        selectToInit["aspectlist"] = false;
+        selectToInit["decorationlist"] = false;
+        selectToInit["structlist"] = false;
+
+        function initSelectOptions()
+        {
+            getSelectOptionList("zonelist", "zoneId");
+            getSelectOptionList("aspectlist", "aspectId");
+            getSelectOptionList("decorationlist", "decorationId");
+            getSelectOptionList("structlist", "structId");
+        }
+
+        function checkAllSelectOK()
+        {
+            if(selectToInit["zonelist"] && selectToInit["aspectlist"] && selectToInit["decorationlist"] && selectToInit["structlist"])
+            {
+                getCustomInfo();
+            }
+        }
+
+        function getSelectOptionList(method, selectId)
+        {
+            try
+            {
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: ServiceAddress.GET_SELECTS,
+                    data: { 'method': method , 'nolimit' : 'false'},
+                    success: function (options)
+                    {
+                        document.getElementById(selectId).innerHTML = options;
+                        selectToInit[method] = true;
+                        checkAllSelectOK();
+                    }
+                    ,
+                    xhrFields: { withCredentials: true },
+                    dataType: "html",
+                    error: function (xhr, err)
+                    {
+                        alert(err);
+                        selectToInit[method] = true;
+                        checkAllSelectOK();
+                    }
+                });
+            }
+            catch (error)
+            {
+                alert(error.toString());
+            }
+        }
+    </script>
+</head>
+<body>
+	<header>
+        <a href="javascript:{ActivityManager.finishSelf();}" class="returnLink">返回</a>
+        <a href="javascript:{refreshHouseInfo();}" class="returnLink" style="float:right;padding-right:0.2rem;">新的客源</a>
+    </header>
+    <div id="houseinfo_container">
+        <!--<div class="house_info_row"><div class="cell">标题:</div><div class="cell" style="font-weight:bold"><input class="form-control" type="text" id="housetitle" name="housetitle" /></div></div>-->
+        <div class="house_info_row"><div class="cell">租者:</div><div class="cell"><input class="form-control" type="text" id="customName" name="customName" /></div></div>
+        <div class="house_info_row"><div class="cell">电话:</div><div class="cell"><input class="form-control" type="text" id="customTel" name="customTel" /></div></div>
+        <div class="house_info_row"><div class="cell">价格:</div><div class="cell"><input class="form-control" type="number" id="houseprice" name="houseprice" style="width:40vw;" /></div><div class="cell">(￥每月)</div></div>
+        <div class="house_info_row"><div class="cell">区域:</div><div class="cell"><select id="zoneId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">小区:</div><div class="cell"><input class="form-control" type="text" id="buildingName" name="buildingName" /></div></div>
+        <!--<div class="house_info_row"><div class="cell">地址:</div><div class="cell"><input class="form-control" type="text" id="address" name="address" /></div></div>-->
+        <div class="house_info_row"><div class="cell">面积:</div><div class="cell"><input class="form-control" type="number" id="areasize" name="areasize" /></div><div class="cell">㎡</div></div>
+        <div class="house_info_row"><div class="cell">楼层:</div><div class="cell"><input class="form-control" type="number" id="floorNum" name="floorNum" style="width:20vw" /></div><div class="cell">层</div></div>
+        <!--<div class="house_info_row"><div class="cell">类型:</div><div class="cell"><select id="joinTypeId" class="form-control"><option value="1">代理</option><option value="2">业主</option><option value="3">合作</option></select></div></div>-->
+        <div class="house_info_row"><div class="cell">朝向:</div><div class="cell"><select id="aspectId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">户型:</div><div class="cell"><select id="structId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">装修:</div><div class="cell"><select id="decorationId" class="form-control"></select></div></div>
+        <div class="house_info_row"><div class="cell">状态:</div><div class="cell"><select id="isCompleted" class="form-control"><option value="false">未租</option><option value="true">已租</option></select></div></div>
+        <div class="house_info_row"><div class="cell"></div><div class="cell"><a href="javascript:{saveCustomInfo();}" class="btn btn-xs btn-success" style="margin-left:0.3rem;height:0.3rem;line-height:0.3rem;font-size:0.2rem;width:1.5rem;">保存信息</a></div></div>
+    </div>
+    <script>
+        initSelectOptions();
+        (function (doc, win)
+        {
+            var docEl = doc.documentElement,
+              resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+              recalc = function ()
+              {
+                  var clientWidth = docEl.clientWidth;
+                  if (!clientWidth) return;
+                  docEl.style.fontSize = 100 * (clientWidth / 480) + 'px';
+              };
+
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false);
+        })(document, window);
+    </script>
+</body>
+</html>
